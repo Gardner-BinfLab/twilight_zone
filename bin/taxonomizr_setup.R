@@ -1,0 +1,13 @@
+install.packages("taxonomizr")
+library(taxonomizr)
+getNamesAndNodes()
+getAccession2taxid()
+read.accession2taxid(list.files('.','accession2taxid.gz$'),'accessionTaxa.sql')
+
+print("Test to make sure downloads worked")
+taxaNodes<-read.nodes('nodes.dmp')
+taxaNames<-read.names('names.dmp')
+taxaId<-accessionToTaxa(c("LN847353.1","AL079352.3"),"accessionTaxa.sql")
+print(taxaId)
+getTaxonomy(taxaId,taxaNodes,taxaNames)
+print("Test complete")
