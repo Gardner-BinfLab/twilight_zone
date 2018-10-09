@@ -4,11 +4,11 @@ use strict;
 use Math::Round;
 use List::Util qw(shuffle);
 
-
+####this thing selects sequences from the pid files for each pid based on the number of pairs you stipulate
 
 #./pid_sortnsplit.pl /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/cmalign_output/subset_genus_nucleotide_combined_nocuttoff_allPIDcombined.counts /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/hmmalign_output/subset_genus_aaseq_combined_nocuttoff_allPIDcombined.counts
-
-my $num_of_pairs_per_PID=10;
+print "How many pairs do you want?\t";
+my $num_of_pairs_per_PID=<STDIN>; chomp($num_of_pairs_per_PID);
 my $cutoff=round($num_of_pairs_per_PID*0.2); #print "$print\n";
 open(my $ncRNA, "<", $ARGV[0]) or die "Can't open $ARGV[0]; $!"; #subset_genus_nucleotide_combined_nocuttoff_allPIDcombined.counts
 open(my $mRNA, "<", $ARGV[1]) or die "Can't open $ARGV[1]; $!"; #subset_genus_aaseq_combined_nocuttoff_allPIDcombined.counts
@@ -48,7 +48,7 @@ foreach my $kline (sort {$a<=>$b} keys %PID){
 	my @array=@{$PID{$kline}};
 	@array= shuffle @array;
 	my $size = scalar(@array);
-	#print "--$size\n";
+	print "$kline\n";
 	my @randnumarray=();
 	my %model_abundance_check=();
 	my $model_type_check=();
@@ -57,10 +57,10 @@ foreach my $kline (sort {$a<=>$b} keys %PID){
 		my $random_number = int(rand($size));
 		#print $random_number, "\t";
 		my @namesplit=split(":",$array[$random_number]);
-		print WRITE1 "$array[$random_number]\n";
+		
 		my $modelname=$namesplit[0]; chomp($modelname);
 		#print "$modelname\n";
-		if (exists $model_abundance_check{$modelname}){
+		if (exists $model_abundance_check{$modelname}){ #only for models that currently have been included for that pid
 			if ($model_abundance_check{$modelname}<$cutoff){ # less then 20%
 				$model_abundance_check{$modelname}++;
 				my @info4seq=split(":",$array[$random_number]);
@@ -68,24 +68,26 @@ foreach my $kline (sort {$a<=>$b} keys %PID){
 				#push( @{ $PID_selected { $pid_num } }, $array[$random_number]); 
 				#print "$info4seq[0]\n"; 
 				chomp($info4seq[0]);
-				if ($info4seq[0]=~m/RF.*/){
+				if ($info4seq[0]=~m/RF.*/){ #prints sequences that are less then 20% are are ncRNA
 					
 					my $filename="subset_genus_nucleotide_combined.$info4seq[0]";
-					my @grepresult1=`sed -n "/>$info4seq[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult1); print WRITE "@grepresult1";
-					my@grepresult11=`sed -n "/>$info4seq[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult11);print WRITE "@grepresult11";
+					my @grepresult1=`sed -n "/>$info4seq[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult1); print WRITE for @grepresult1;
+					print WRITE1 "$array[$random_number]\n";
+					my@grepresult11=`sed -n "/>$info4seq[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult11);print WRITE for @grepresult11;
 				}
 
 			
-				else{
+				else{ #prints sequences that are less then 20% and are mRNA
 					my $filename="subset_genus_aaseq_combined_nocuttoff.bactNOG.$info4seq[0].meta_raw.nuc"; #subset_genus_aaseq_combined_nocuttoff.bactNOG.ENOG4105C6P.meta_raw.nuc
-					my @grepresult3=`sed -n "/>$info4seq[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult3); print WRITE "@grepresult3";
-					my@grepresult33=`sed -n "/>$info4seq[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult33);print WRITE "@grepresult33";					
+					my @grepresult3=`sed -n "/>$info4seq[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult3); print WRITE for @grepresult3;
+					print WRITE1 "$array[$random_number]\n";
+					my@grepresult33=`sed -n "/>$info4seq[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult33);print WRITE for @grepresult33;					
 
 										
 				}
 			}
 		
-			else{ #more then 20%
+			else{ #more then 20% so doesn't print them
 				$model_abundance_check{$modelname}++;
 				
 				
@@ -104,22 +106,24 @@ foreach my $kline (sort {$a<=>$b} keys %PID){
 			}
 		}
 		
-		else{
+		else{ #for models that haven't yet been included
 			$model_abundance_check{$modelname}++;
 			my @info4seq1=split(":",$array[$random_number]);chomp($info4seq1[0]);
-			if ($info4seq1[0]=~m/RF.*/){
+			if ($info4seq1[0]=~m/RF.*/){ #first time sequence for a model that is ncRNA
 					
 				my $filename="subset_genus_nucleotide_combined.$info4seq1[0]";
-				my @grepresult2=`sed -n "/>$info4seq1[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult2); print WRITE "@grepresult2";
-				my@grepresult21=`sed -n "/>$info4seq1[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult21);print WRITE "@grepresult21";
+				my @grepresult2=`sed -n "/>$info4seq1[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult2); print WRITE for @grepresult2;
+				print WRITE1 "$array[$random_number]\n";
+				my@grepresult21=`sed -n "/>$info4seq1[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult21);print WRITE for @grepresult21;
 			
 
 			}
 		
-			else{
+			else{ #first time sequence for a model that is mRNA
 				my $filename="subset_genus_aaseq_combined_nocuttoff.bactNOG.$info4seq1[0].meta_raw.nuc"; #subset_genus_aaseq_combined_nocuttoff.bactNOG.ENOG4105C6P.meta_raw.nuc
-				my @grepresult4=`sed -n "/>$info4seq1[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult4); print WRITE "@grepresult4";
-				my@grepresult44=`sed -n "/>$info4seq1[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult44);print WRITE "@grepresult44";					
+				my @grepresult4=`sed -n "/>$info4seq1[1].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult4); print WRITE for @grepresult4;
+				print WRITE1 "$array[$random_number]\n";
+				my@grepresult44=`sed -n "/>$info4seq1[2].*/,/>.*/p" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/$filename`; pop(@grepresult44);print WRITE for @grepresult44;					
 
 										
 			}
