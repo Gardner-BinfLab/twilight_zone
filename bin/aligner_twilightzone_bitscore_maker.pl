@@ -41,21 +41,24 @@ use List::Util 'shuffle';
 
 
 
-
-
 #!!!!!!!!!!!!!!!!!!!!
-
-##########SOME WEIRD SHIT IS HAPPENING for both the write out to query file and mixed pid file. Its really f'd up, Check terminal...
-##fixed I think
-
+#Paths
+my $model_files="/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files";
+my $shuffddb="/media/stephmcgimpsey/GardnerLab-backup1/Refseq/shuffled_database_uniqseqs.test";
+my $pid_sequences="/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences";
 #!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
 system("~/Documents/pid_sortnsplit_uniqueseqfixer_forpidfiles.sh");
 
 
 
 
-my @findresult_fasta=system("find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42")or die "Problem finding PID files: $!\n";
-system("find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42 | xargs -ifoo esl-sfetch --index foo") or die "Problem indexing PID files: $!\n";
+my @findresult_fasta=system("find $pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42")or die "Problem finding PID files: $!\n";
+system("find $pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42 | xargs -ifoo esl-sfetch --index foo") or die "Problem indexing PID files: $!\n";
 @findresult_fasta=shuffle(@findresult_fasta);
 #print "@findresult_fasta\n";
 my %pairs_store=();
@@ -69,7 +72,7 @@ foreach my $pid (@findresult_fasta){
 	$pairs_name=~s/\.uniq//;
 	$split_pid[7]=~s/\.uniq//;
 	#print "pn: $pairs_name\n";
-	my @findresult_pairs=`cat /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/$pairs_name`;
+	my @findresult_pairs=system("cat $pid_sequences/$pairs_name");
 	
 	foreach my $pair (@findresult_pairs){ #this basically stores the model name as the key and the pairs of seq's plus their pid as the value so later we can do the alignments by model group
 		my @split_grep=split(":",$pair);chomp($split_grep[2]);chomp($split_grep[0]);#$split_pid[7]=~s/\_pid\_seqs//;
@@ -81,8 +84,8 @@ foreach my $pid (@findresult_fasta){
 
 foreach my $model (keys %pairs_store){ #foreach model storesd
 	
-	open(WRITE,">", "/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/$model-mixedpid.fasta") or die "Can't make file $model-mixedpid.fasta; $!";
-	open(WRITE1,">", "/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/$model-queryseq.fasta") or die "Can't make file $model-queryseq.fasta; $!";
+	open(WRITE,">", "$model_files/$model-mixedpid.fasta") or die "Can't make file $model-mixedpid.fasta; $!";
+	open(WRITE1,">", "$model_files/$model-queryseq.fasta") or die "Can't make file $model-queryseq.fasta; $!";
 	my @values=@{$pairs_store{$model}}; #dereference the array stored as the value of the hash
 	my $size_value=scalar(@values); #figure out the size of the array aka
 	
@@ -90,7 +93,7 @@ foreach my $model (keys %pairs_store){ #foreach model storesd
 		#print "$model\t$pid_val\n";
 		my @split_seqpairs=split(":", $pid_val); chomp($split_seqpairs[2]); #split based in the : which splits out the two sequence names and the PID filename
 		#print "$split_seqpairs[2]\n";
-		my @sfetch=`esl-sfetch /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/$split_seqpairs[2] $split_seqpairs[0]`; chomp($sfetch[0]); #grabs the sequence for the first sequence name from the PID file
+		my @sfetch=system("esl-sfetch $pid_sequences/$split_seqpairs[2] $split_seqpairs[0]"); chomp($sfetch[0]); #grabs the sequence for the first sequence name from the PID file
 		
 	
 			print WRITE "$sfetch[0]\n"; print WRITE1 "$sfetch[0]\n";
@@ -105,7 +108,7 @@ foreach my $model (keys %pairs_store){ #foreach model storesd
 
 
 
-		my @sfetch1=`esl-sfetch /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/$split_seqpairs[2] $split_seqpairs[1]`; chomp($sfetch1[0]); #grabs the second sequence and writes it just to the mixed PID file
+		my @sfetch1=system("esl-sfetch $pid_sequences/$split_seqpairs[2] $split_seqpairs[1]"); chomp($sfetch1[0]); #grabs the second sequence and writes it just to the mixed PID file
 		print WRITE "$sfetch1[0]\n";shift(@sfetch1); s{^\s+|\s+$}{}g foreach @sfetch1;
 		my $l=0;
 		while ($l<scalar(@sfetch1)){#writing the actual fasta sequence
@@ -130,11 +133,11 @@ system("~/Documents/pid_sortnsplit_uniqueseqfixer_forqueryseqs.sh");
 
 my $counter=0;
 
-my @findresult_modelfasta=`find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files -maxdepth 1 -regex ".*mixedpid.fasta.uniq"`;
+my @findresult_modelfasta=system("find $model_files -maxdepth 1 -regex \42.*mixedpid.fasta.uniq\42");
 
 foreach my $model_fasta (@findresult_modelfasta){
 	my $queryname=$model_fasta; chomp($queryname);
-	my $shuffddb="/media/stephmcgimpsey/GardnerLab-backup1/Refseq/shuffled_database_uniqseqs.test";
+	
 	my $search_queryname=$queryname;
 	$search_queryname=~s/mixedpid/queryseq/g; #this bit isn't really needed once I figure out how to loop through each sequence for query searching
 	
@@ -144,15 +147,15 @@ foreach my $model_fasta (@findresult_modelfasta){
 	my $query_modelname=$queryname; $query_modelname=~s/\/media\/stephmcgimpsey\/GardnerLab-backup1\/Refseq\/Sequences\/pid_sequences\/model_files\///; $query_modelname=~s/\-mixedpid\.fasta\.uniq//;
 	$counter++;	
 	print "$query_modelname\n";
-	my @cat=`cat $shuffddb $queryname >/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`; #finally working!!!
-	`makeblastdb -in /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db -out /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db.blast -parse_seqids -dbtype nucl`;
+	my @cat=system("cat $shuffddb $queryname >$model_files/transient_dbfile.db"); #finally working!!!
+	system("makeblastdb -in $model_files/transient_dbfile.db -out $model_files/transient_dbfile.db.blast -parse_seqids -dbtype nucl");
 
 
 
-	`esl-sfetch --index /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`;
-	my $numseqsinfile=`grep -c "^>" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`; chomp($numseqsinfile);
+	system("esl-sfetch --index $model_files/transient_dbfile.db");
+	my $numseqsinfile=system("grep -c \42^>\42 $model_files/transient_dbfile.db"); chomp($numseqsinfile);
 	print "Number of sequences in DB; $numseqsinfile\n";
-	my $numseqsinquery=`grep "^>" $search_queryname`;
+	my $numseqsinquery=system("grep \42^>\42 $search_queryname");
 	my @numseqsinquery=split(/\n/,$numseqsinquery);
 	
 	
@@ -164,20 +167,20 @@ foreach my $model_fasta (@findresult_modelfasta){
 	#need to sfetch for each grep result and write it out to a temporary file to be used as the query file	
 		my @splitqueryline=split('\s+',$queryline); $splitqueryline[0]=~s/\>//; ###DOUBLE CHECK THIS SECTION
 		#print "$splitqueryline[0]";
-		`esl-sfetch --index $search_queryname`;
-		my $query_filename_trans="/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_query.fasta";
-		`esl-sfetch $search_queryname $splitqueryline[0] >$query_filename_trans`;
+		system("esl-sfetch --index $search_queryname");
+		my $query_filename_trans="$model_files/transient_query.fasta";
+		system("esl-sfetch $search_queryname $splitqueryline[0] >$query_filename_trans");
 		
 	#print "\n\n";
 
 ####TIME EACH ALIGNMENT INDIV
 ###commment in what the flags are and why we used them
 	########################ssearch36 -local
-		my @ss_output=`~/Software/fasta36/bin/ssearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`; 
+		my @ss_output=system("~/Software/fasta36/bin/ssearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans $model_files/transient_dbfile.db"); 
 	#change -E 2 to -E $numseqsinfile
 	
 	########################ggsearch36 -glocal
-		my @gg_output=`~/Software/fasta36/bin/ggsearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`;
+		my @gg_output=system("~/Software/fasta36/bin/ggsearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans $model_files/transient_dbfile.db");
 
 	#change -E 2 to -E $numseqsinfile
 
@@ -186,11 +189,11 @@ foreach my $model_fasta (@findresult_modelfasta){
 		###
 
 	#########################nhmmer -profile
-		my @nhm_output=`nhmmer --toponly --dna --noali -T -1000 $query_filename_trans /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`;
+		my @nhm_output=system("nhmmer --toponly --dna --noali -T -1000 $query_filename_trans $model_files/transient_dbfile.db");
 		#print "@nhm_output\n";
 
 	#########################blastn -heuristic
-		my @bl_output=`blastn -strand plus -task blastn -evalue 1000 -num_alignments 0 -index_name /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db.ssi -query $query_filename_trans -db /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db.blast`;
+		my @bl_output=system("blastn -strand plus -task blastn -evalue 1000 -num_alignments 0 -index_name $model_files/transient_dbfile.db.ssi -query $query_filename_trans -db $model_files/transient_dbfile.db.blast");
 		#print "@bl_output\n";
 		
 		
