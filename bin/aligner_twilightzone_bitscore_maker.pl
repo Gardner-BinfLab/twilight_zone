@@ -54,8 +54,8 @@ system("~/Documents/pid_sortnsplit_uniqueseqfixer_forpidfiles.sh");
 
 
 
-my @findresult_fasta=`find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences -maxdepth 1 -regex ".*fasta.uniq"`;
-`find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences -maxdepth 1 -regex ".*fasta.uniq" | xargs -ifoo esl-sfetch --index foo`;
+my @findresult_fasta=system("find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42")or die "Problem finding PID files: $!\n";
+system("find /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42 | xargs -ifoo esl-sfetch --index foo") or die "Problem indexing PID files: $!\n";
 @findresult_fasta=shuffle(@findresult_fasta);
 #print "@findresult_fasta\n";
 my %pairs_store=();
