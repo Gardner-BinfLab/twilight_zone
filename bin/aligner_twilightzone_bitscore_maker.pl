@@ -19,7 +19,7 @@ use List::Util 'shuffle';
 
 
 ###open pid pairs files
-###make groups based on family but tag them with correct PID <-grab the aa seq
+###make groups based on family but tag them with correct PID
 ##run the alignments with each family (by opening fasta files and grepping them all together using sfetch I think?? or sed thing from pid_sortnsplit.pl and writing them to a file before concatenating in a pipe with false db) and the false DB
 
 
@@ -63,9 +63,11 @@ my %pairs_store=();
 foreach my $pid (@findresult_fasta){
 	#this is to get the pairs info out of the files
 	my @split_pid=split("/", $pid);
-	$split_pid[7]=~s/\.fasta//; chomp($split_pid[7]);#print "$split_pid[7]\t";
+	$split_pid[7]=~s/\.fasta//; 
+	chomp($split_pid[7]);#print "$split_pid[7]\t";
 	my $pairs_name="\.\/$split_pid[7].pairs"; #print "$pairs_name\n";
-	$pairs_name=~s/\.uniq//;$split_pid[7]=~s/\.uniq//;
+	$pairs_name=~s/\.uniq//;
+	$split_pid[7]=~s/\.uniq//;
 	#print "pn: $pairs_name\n";
 	my @findresult_pairs=`cat /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/$pairs_name`;
 	
@@ -151,13 +153,16 @@ foreach my $model_fasta (@findresult_modelfasta){
 	my $numseqsinfile=`grep -c "^>" /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`; chomp($numseqsinfile);
 	print "Number of sequences in DB; $numseqsinfile\n";
 	my $numseqsinquery=`grep "^>" $search_queryname`;
+	my @numseqsinquery=split(/\n/,$numseqsinquery);
+	
+	
 ###Loop through '-queryfile sequences here'
-	foreach my $queryline ($numseqsinquery){ #basically for each sequence loop through all the searches
+	foreach my $queryline (@numseqsinquery){ #basically for each sequence loop through all the searches
 
 
 
 	#need to sfetch for each grep result and write it out to a temporary file to be used as the query file	
-		my @splitqueryline=split('\s+',$queryline); $splitqueryline[0]=~s/\>//;
+		my @splitqueryline=split('\s+',$queryline); $splitqueryline[0]=~s/\>//; ###DOUBLE CHECK THIS SECTION
 		#print "$splitqueryline[0]";
 		`esl-sfetch --index $search_queryname`;
 		my $query_filename_trans="/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_query.fasta";
@@ -165,10 +170,12 @@ foreach my $model_fasta (@findresult_modelfasta){
 		
 	#print "\n\n";
 
-
+####TIME EACH ALIGNMENT INDIV
+###commment in what the flags are and why we used them
 	########################ssearch36 -local
 		my @ss_output=`~/Software/fasta36/bin/ssearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`; 
 	#change -E 2 to -E $numseqsinfile
+	
 	########################ggsearch36 -glocal
 		my @gg_output=`~/Software/fasta36/bin/ggsearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db`;
 
@@ -185,6 +192,15 @@ foreach my $model_fasta (@findresult_modelfasta){
 	#########################blastn -heuristic
 		my @bl_output=`blastn -strand plus -task blastn -evalue 1000 -num_alignments 0 -index_name /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db.ssi -query $query_filename_trans -db /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/pid_sequences/model_files/transient_dbfile.db.blast`;
 		#print "@bl_output\n";
+		
+		
+		#orf1:orf2-shuffled:s/g/h/b23.5 
+	
+		
+		
+		
+		
+		
 
 	}
 	####end of loop
