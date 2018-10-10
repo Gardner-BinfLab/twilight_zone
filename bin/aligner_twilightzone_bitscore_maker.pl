@@ -57,13 +57,16 @@ system("~/Documents/pid_sortnsplit_uniqueseqfixer_forpidfiles.sh");
 
 
 
-my @findresult_fasta=system("find $pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42")or die "Problem finding PID files: $!\n";
-system("find $pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42 | xargs -ifoo esl-sfetch --index foo") or die "Problem indexing PID files: $!\n";
+my @findresult_fasta=`find $pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42`;# or die "Problem finding PID files: $!\n";
+system("find $pid_sequences -maxdepth 1 -regex \42.*fasta.uniq\42 | xargs -ifoo esl-sfetch --index foo >$model_files/junk.txt");# or die "Problem indexing PID files: $!\n";
 @findresult_fasta=shuffle(@findresult_fasta);
 #print "@findresult_fasta\n";
 my %pairs_store=();
+#print ">>>>>>>>>>>>>>>>>>>>>>>>>>\n@findresult_fasta\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
 foreach my $pid (@findresult_fasta){
+	chomp($pid); #print "$pid\n";
+	#system("esl-sfetch --index $pid") or die "Problem indexing PID file $pid: $!\n";
 	#this is to get the pairs info out of the files
 	my @split_pid=split("/", $pid);
 	$split_pid[7]=~s/\.fasta//; 
@@ -72,7 +75,7 @@ foreach my $pid (@findresult_fasta){
 	$pairs_name=~s/\.uniq//;
 	$split_pid[7]=~s/\.uniq//;
 	#print "pn: $pairs_name\n";
-	my @findresult_pairs=system("cat $pid_sequences/$pairs_name");
+	my @findresult_pairs=`cat $pid_sequences/$pairs_name`;
 	
 	foreach my $pair (@findresult_pairs){ #this basically stores the model name as the key and the pairs of seq's plus their pid as the value so later we can do the alignments by model group
 		my @split_grep=split(":",$pair);chomp($split_grep[2]);chomp($split_grep[0]);#$split_pid[7]=~s/\_pid\_seqs//;
@@ -93,7 +96,7 @@ foreach my $model (keys %pairs_store){ #foreach model storesd
 		#print "$model\t$pid_val\n";
 		my @split_seqpairs=split(":", $pid_val); chomp($split_seqpairs[2]); #split based in the : which splits out the two sequence names and the PID filename
 		#print "$split_seqpairs[2]\n";
-		my @sfetch=system("esl-sfetch $pid_sequences/$split_seqpairs[2] $split_seqpairs[0]"); chomp($sfetch[0]); #grabs the sequence for the first sequence name from the PID file
+		my @sfetch=`esl-sfetch $pid_sequences/$split_seqpairs[2] $split_seqpairs[0]`; chomp($sfetch[0]); #grabs the sequence for the first sequence name from the PID file
 		
 	
 			print WRITE "$sfetch[0]\n"; print WRITE1 "$sfetch[0]\n";
@@ -108,7 +111,7 @@ foreach my $model (keys %pairs_store){ #foreach model storesd
 
 
 
-		my @sfetch1=system("esl-sfetch $pid_sequences/$split_seqpairs[2] $split_seqpairs[1]"); chomp($sfetch1[0]); #grabs the second sequence and writes it just to the mixed PID file
+		my @sfetch1=`esl-sfetch $pid_sequences/$split_seqpairs[2] $split_seqpairs[1]`; chomp($sfetch1[0]); #grabs the second sequence and writes it just to the mixed PID file
 		print WRITE "$sfetch1[0]\n";shift(@sfetch1); s{^\s+|\s+$}{}g foreach @sfetch1;
 		my $l=0;
 		while ($l<scalar(@sfetch1)){#writing the actual fasta sequence
@@ -128,13 +131,13 @@ close(WRITE1);
 #############Just so you know, you will have to use the .pairs files to get the bitscores and sequence pairs sorted back into the right places as when you remove duplicates sequences (due to the same sequence being in multiple PID files) from the mixed and query fasta files, you are removing PID info for that duplicate too.
 
 print "Fixing model files to remove duplicates...\t";
-system("~/Documents/pid_sortnsplit_uniqueseqfixer.sh");
-system("~/Documents/pid_sortnsplit_uniqueseqfixer_forqueryseqs.sh");
+system("~/Documents/pid_sortnsplit_uniqueseqfixer.sh"); #uniques modle files
+system("~/Documents/pid_sortnsplit_uniqueseqfixer_forqueryseqs.sh"); #uniq's unique files
 
 my $counter=0;
 
-my @findresult_modelfasta=system("find $model_files -maxdepth 1 -regex \42.*mixedpid.fasta.uniq\42");
-
+my @findresult_modelfasta=`find $model_files -maxdepth 1 -regex \42.*mixedpid.fasta.uniq\42`;
+#print "%%%%%%%%%%%%\n@findresult_modelfasta\n%%%%%%%%%%%%%%/n";
 foreach my $model_fasta (@findresult_modelfasta){
 	my $queryname=$model_fasta; chomp($queryname);
 	
@@ -147,16 +150,17 @@ foreach my $model_fasta (@findresult_modelfasta){
 	my $query_modelname=$queryname; $query_modelname=~s/\/media\/stephmcgimpsey\/GardnerLab-backup1\/Refseq\/Sequences\/pid_sequences\/model_files\///; $query_modelname=~s/\-mixedpid\.fasta\.uniq//;
 	$counter++;	
 	print "$query_modelname\n";
-	my @cat=system("cat $shuffddb $queryname >$model_files/transient_dbfile.db"); #finally working!!!
-	system("makeblastdb -in $model_files/transient_dbfile.db -out $model_files/transient_dbfile.db.blast -parse_seqids -dbtype nucl");
+	system("cat $shuffddb $queryname >$model_files/transient_dbfile.db"); #makes the combined database
+	system("makeblastdb -in $model_files/transient_dbfile.db -out $model_files/transient_dbfile.db.blast -parse_seqids -dbtype nucl >$model_files/junk.txt"); #makes the blast index/reference for the database
 
 
 
-	system("esl-sfetch --index $model_files/transient_dbfile.db");
-	my $numseqsinfile=system("grep -c \42^>\42 $model_files/transient_dbfile.db"); chomp($numseqsinfile);
-	print "Number of sequences in DB; $numseqsinfile\n";
-	my $numseqsinquery=system("grep \42^>\42 $search_queryname");
-	my @numseqsinquery=split(/\n/,$numseqsinquery);
+	system("esl-sfetch --index $model_files/transient_dbfile.db >$model_files/junk.txt"); #indexes the combined database
+	my $numseqsinfile=`grep -c \42^>\42 $model_files/transient_dbfile.db`; chomp($numseqsinfile); #this line and the one below figure out how many sequences in the combined database
+	print "Number of sequences in DB; $numseqsinfile\t";
+	my @numseqsinquery=`grep \42^>\42 $search_queryname`;
+	my $scalar=scalar(@numseqsinquery); print "Number of query sequences: $scalar\t";
+	#my @numseqsinquery=split(/\n/,$numseqsinquery);
 	
 	
 ###Loop through '-queryfile sequences here'
@@ -166,8 +170,8 @@ foreach my $model_fasta (@findresult_modelfasta){
 
 	#need to sfetch for each grep result and write it out to a temporary file to be used as the query file	
 		my @splitqueryline=split('\s+',$queryline); $splitqueryline[0]=~s/\>//; ###DOUBLE CHECK THIS SECTION
-		#print "$splitqueryline[0]";
-		system("esl-sfetch --index $search_queryname");
+		print "$splitqueryline[0]\t";
+		system("esl-sfetch --index $search_queryname >$model_files/junk.txt");
 		my $query_filename_trans="$model_files/transient_query.fasta";
 		system("esl-sfetch $search_queryname $splitqueryline[0] >$query_filename_trans");
 		
@@ -176,11 +180,11 @@ foreach my $model_fasta (@findresult_modelfasta){
 ####TIME EACH ALIGNMENT INDIV
 ###commment in what the flags are and why we used them
 	########################ssearch36 -local
-		my @ss_output=system("~/Software/fasta36/bin/ssearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans $model_files/transient_dbfile.db"); 
+		my @ss_output=`~/Software/fasta36/bin/ssearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans $model_files/transient_dbfile.db`; 
 	#change -E 2 to -E $numseqsinfile
 	
 	########################ggsearch36 -glocal
-		my @gg_output=system("~/Software/fasta36/bin/ggsearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans $model_files/transient_dbfile.db");
+		my @gg_output=`~/Software/fasta36/bin/ggsearch36 -E $numseqsinfile -3 -m 3 -n -d 0 -z 0 $query_filename_trans $model_files/transient_dbfile.db`;
 
 	#change -E 2 to -E $numseqsinfile
 
@@ -189,11 +193,11 @@ foreach my $model_fasta (@findresult_modelfasta){
 		###
 
 	#########################nhmmer -profile
-		my @nhm_output=system("nhmmer --toponly --dna --noali -T -1000 $query_filename_trans $model_files/transient_dbfile.db");
+		my @nhm_output=`nhmmer --toponly --dna --noali -T -1000 $query_filename_trans $model_files/transient_dbfile.db`;
 		#print "@nhm_output\n";
 
 	#########################blastn -heuristic
-		my @bl_output=system("blastn -strand plus -task blastn -evalue 1000 -num_alignments 0 -index_name $model_files/transient_dbfile.db.ssi -query $query_filename_trans -db $model_files/transient_dbfile.db.blast");
+		my @bl_output=`blastn -strand plus -task blastn -evalue 1000 -num_alignments 0 -index_name $model_files/transient_dbfile.db.ssi -query $query_filename_trans -db $model_files/transient_dbfile.db.blast`;
 		#print "@bl_output\n";
 		
 		
@@ -207,7 +211,7 @@ foreach my $model_fasta (@findresult_modelfasta){
 
 	}
 	####end of loop
-
+	print "\n";
 
 
 
