@@ -9,7 +9,7 @@ for f in *mixedpid.fasta; do
 #echo "Done with $f file..";
 done
 wait ${!};
-echo "Model files all sequence uniqued";
+echo "Gene Family aka model files all sequence uniqued";
 
 
 

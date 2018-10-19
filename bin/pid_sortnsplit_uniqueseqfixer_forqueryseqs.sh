@@ -9,7 +9,7 @@ for f in *queryseq.fasta; do
 #echo "Done with $f file..";
 done
 wait ${!};
-echo "Model files all sequence uniqued";
+echo "Query files all sequence uniqued";
 
 
 
