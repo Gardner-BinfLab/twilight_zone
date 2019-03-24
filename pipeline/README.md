@@ -1,6 +1,6 @@
 # Twilight Zone of Nucleotide Homology
 
-Research by Stephanie McGimpsey
+Research by Stephanie McGimpsey \\
 Supervision by Paul Gardner
 
 ## Database Creation
