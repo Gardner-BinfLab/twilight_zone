@@ -74,16 +74,52 @@ cat allcmhits_filenames_genus_coordsBS.txt | perl -ane 'if($F[0]=~/GCF_.*/){if($
 ./sequence_grabber_from_coordinates.pl uniqgenus_noNA_candidatusincluded_topfilecmhits.txt
 ```
 ### CORE GENES FOR GENUS REPRESENTATIVE SUBSET
+mRNA core genes - HMM search of genus representative reverse translated genomes 
+```
+ls *.fa | parallel --jobs 36 --eta --nice 5 'hmmsearch --noali --cut_ga --tblout {}.tbl /Volumes/userdata/staff_groups/gardnerlab/stephmcgimpsey/146_coregenes_gacutoff.hmm {} >/dev/null'
+```
+ncRNA core genes - CM search of genus representative genomes
+```
+ls *.fa | parallel --jobs 36 --eta --nice 5 'cmsearch --T 20 --noali --tblout {}.tbl /Volumes/userdata/staff_groups/gardnerlab/stephmcgimpsey/combined_9cms_1thirdmaxbs.cm {} >/dev/null'
+```
 
+tRNA core genes - tRNAscan of genus representative genomes
+```
+ls *.fna |  parallel --jobs 36 --eta --nice 5 'tRNAscan-SE -B -o {}.tRNA {}'
+```
+
+Length restrictions
+
+Top match chosen
+
+Reverse translation in from for protein genes
 
 ## Twilight Zone Calculation
 ### PID CALCULATION & SELECTION
 
 
+
 ### ALIGNMENT
+Four core alignment algorithms
+
+nhmmer iterative
+
+ssearch34
 
 
-### SENSITIVITY CALCULATION
+### FPR SIMILARITY THRESHOLD
+Determining the similarity threshold and labelling true homologous pairs as above or below
+```
+./twilightzone_maker_forfractd.pl
+```
+
+### TWILIGHT ZONE SENSITIVITY PER PID AND BOOTSTRAP
+Bootstrap and Graph all rolled into one
+```
+final_twizone.R
+```
+## SHUFFLED AND RANDOM CONTROLS
+### SHUFFLED
 
 
-### TWILIGHT ZONE AND BOOTSTRAP
+### RANDOM
