@@ -1,0 +1,47 @@
+DATASET_TEXT
+SEPARATOR COMMA
+DATASET_LABEL,colourstrips
+MARGIN,0
+SHOW_INTERNAL,1
+LABEL_ROTATION,0
+STRAIGHT_LABELS,0
+ALIGN_TO_TREE,0
+SIZE_FACTOR,1
+
+DATA
+Acidobacteria_12,Acidobacteria 12,-1,#8b7355,bold,1,0
+Actinobacteria_257,Actinobacteria 257,-1,#2E7ECD,bold,1,0
+Aquificae_10,Aquificae 10,-1,#BD0F3B,bold,1,0
+Armatimonadetes_2,Armatimonadetes 2,-1,#2A9CCF,bold,1,0
+Bacteroidetes_223,Bacteroidetes 223,-1,#CD0B63,bold,1,0
+Balneolaeota_3,Balneolaeota 3,-1,#27BAD1,bold,1,0
+Caldiserica_1,Caldiserica 1,-1,#DE078C,bold,1,0
+Calditrichaeota_1,Calditrichaeota 1,-1,#27BAB4,bold,1,0
+Chlamydiae_7,Chlamydiae 7,-1,#EE03B4,bold,1,0
+Chlorobi_5,Chlorobi 5,-1,#27BA97,bold,1,0
+Chloroflexi_23,Chloroflexi 23,-1,#FF00DD,bold,1,0
+Chrysiogenetes_2,Chrysiogenetes 2,-1,#28BA7A,bold,1,0
+Cyanobacteria_75,Cyanobacteria 75,-1,#E903D5,bold,1,0
+Deferribacteres_6,Deferribacteres 6,-1,#28BA5D,bold,1,0
+Deinococcus-Thermus_6,Deinococcus-Thermus 6,-1,#D306CE,bold,1,0
+Dictyoglomi_1,Dictyoglomi 1,-1,#29BA41,bold,1,0
+Elusimicrobia_2,Elusimicrobia 2,-1,#BD0AC6,bold,1,0
+Fibrobacteres_2,Fibrobacteres 2,-1,#53C734,bold,1,0
+Firmicutes_365,Firmicutes 365,-1,#A70DBF,bold,1,0
+Fusobacteria_10,Fusobacteria 10,-1,#7DD527,bold,1,0
+Gemmatimonadetes_1,Gemmatimonadetes 1,-1,#9111B8,bold,1,0
+Ignavibacteriae_2,Ignavibacteriae 2,-1,#A7E31A,bold,1,0
+Kiritimatiellaeota_1,Kiritimatiellaeota 1,-1,#7F14BB,bold,1,0
+Lentisphaerae_1,Lentisphaerae 1,-1,#D1F10C,bold,1,0
+NA_2,NA 2,-1,#6E18BE,bold,1,0
+Nitrospinae_1,Nitrospinae 1,-1,#FBFF00,bold,1,0
+Nitrospirae_3,Nitrospirae 3,-1,#5C1CC1,bold,1,0
+Planctomycetes_21,Planctomycetes 21,-1,#F2E002,bold,1,0
+Proteobacteria_806,Proteobacteria 806,-1,#4B20C4,bold,1,0
+Rhodothermaeota_2,Rhodothermaeota 2,-1,#EAC104,bold,1,0
+Spirochaetes_14,Spirochaetes 14,-1,#3A24C7,bold,1,0
+Synergistetes_11,Synergistetes 11,-1,#E1A207,bold,1,0
+Tenericutes_6,Tenericutes 6,-1,#3642C9,bold,1,0
+Thermodesulfobacteria_4,Thermodesulfobacteria 4,-1,#D98309,bold,1,0
+Thermotogae_10,Thermotogae 10,-1,#3260CB,bold,1,0
+Verrucomicrobia_14,Verrucomicrobia 14,-1,#D1650C,bold,1,0
