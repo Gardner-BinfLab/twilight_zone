@@ -1,4 +1,5 @@
-# Twilight Zone of Nucleotide Homology
+# Twilight Zone of Nucleotide Homology 
+### 50 Pairs Subset
 
 Research by Stephanie McGimpsey 
 
@@ -90,22 +91,63 @@ ls *.fna |  parallel --jobs 36 --eta --nice 5 'tRNAscan-SE -B -o {}.tRNA {}'
 ```
 
 Length restrictions
+```
+find . -regex ".*1hmmalign" | perl -lane '$C=$F[0];$C=~s/1hmmalign/1hmmalignclust/; system("esl-reformat --replace .:- -o $C clustal $F[0]");' 
+find . -regex ".*1cmalign" | perl -lane '$C=$F[0];$C=~s/1cmalign/1cmalignclust/; system("esl-reformat --replace .:- -o $C clustal $F[0]");' 
+find . -maxdepth 1 -regex ".*.1hmmalignclust" | xargs -ifoo esl-alimanip --lnfract 0.333 --lxfract 1.667 -o foo.fractd foo
+find . -maxdepth 1 -regex ".*.1cmalignclust" | xargs -ifoo esl-alimanip --lnfract 0.333 --lxfract 1.667 -o foo.fractd foo
+```
 
-Top match chosen
+Top match chosen - from pool of sequence left after previous steps
+```
+cat subset_genus_nucleotide_combined.all | perl -ane '$F[0]=~chomp($F[0]); system("grep -w $F[0] header_filenames.txt"); print "$F[3]\t$F[7]\t$F[8]\t$F[9]\t$F[14]\t$F[15]\n";' | perl -ane 'if($F[0]=~/GCF.*/){print "$F[0].";$G=$F[1];}else{print "$F[0]\t$G\t$F[1]\t$F[2]\t$F[3]\t$F[4]\t$F[5]\n";}' | sort -k1,1 -k6,6nr | sort -u -k1,1 >subset_genus_nucleotide_combined_nocuttoff.tophitpergenomepercm 
+cat subset_genus_aaseq_combined.all | perl -lane '$F[18]=~s/source=//; system("grep -w $F[18] header_filenames.txt");print "$F[0]\t$F[2]\t$F[4]\t$F[5]\t$F[19]";' | perl -ane 'if($F[0]=~/GCF.*/){print "$F[0].";$c=$F[1];}else{print "$F[1]\t$c\t$F[0]\t$F[2]\t$F[3]\t$F[4]\n";}' | sort -k1,1 -k5,5nr | sort -u -k1,1 >subset_genus_aaseq_combined_nocuttoff.tophitpergenomeperhmm
+cat subset_genus_nucleotide_combined.tophitpergenomepercm subset_genus_aaseq_combined.tophitpergenomeperhmm | perl -lane '$F[0]=~s/.*\.fna\.//; $F[0]=~s/bactNOG\.//;$F[0]=~s/\..*raw//; if($F[0]=~m/ENOG.*/){print "$F[0]\t$F[1]\t$F[4]";}if($F[0]=~/RF.*/){print "$F[0]\t$F[1]\t$F[5]";};' >subset_genus_aa_nuc_combined.tophitpergenomeper
+```
 
 Reverse translation in from for protein genes
+```
+find . -regex ".*1hmmalignclust.fractd.clust2" | perl -lane '$F[0]=~s/\.\///;$C=$F[0];$G=$F[0];$C=~s/\.clust2//;$G=~s/\.1hmmalignclust.fractd.clust2/\.fractd.fixedheader/;$C=~s/1hmmalignclust/1hmmalignclustnuc/;system("/home/stephmcgimpsey/Scripts/pal2nal.v14/pal2nal.pl /length_fractd_alignments/$F[0] /gene_sequences/$G >/length_fractd_alignments/$C");'
+```
+
 
 ## Twilight Zone Calculation
 ### PID CALCULATION & SELECTION
 
+PID of all sequences
+```
+```
 
+50 Pairs selection based on PIDs
+```
+```
+
+
+Make sets of files required for alignment process
+```
+aligner_twilightzone_bitscore_maker_forfractddata_50pairs_redo_headerfilesetup.pl
+```
 
 ### ALIGNMENT
 Four core alignment algorithms
+```
+find /models -maxdepth 1 -regex "/models/.*\-mixedpid\.fasta\.uniq" | parallel -j procfile --eta './aligner_twilightzone_bitscore_maker_forfractddata_50pairs_redo.pl {}'
+```
+
+Split the four outputs into different files
+```
+for f in `find . -maxdepth 1 -regex ".*.bs_fix2" | perl -lane '$F[0]=~s/\.bs_fix2//; $F[0]=~s/\.\///;print "$F[0]";'`;do grep ":s:" $f.bs_fix2 >/all_aligners_split/$f.s.bs;grep ":n:" $f.bs_fix2 >/all_aligners_split/$f.n.bs;grep ":b:" $f.bs_fix2 >/media/all_aligners_split/$f.b.bs;grep ":g:" $f.bs_fix2 >//all_aligners_split/$f.g.bs;done
+```
 
 nhmmer iterative
+```
+find /models -maxdepth 1 -regex "/models/.*\-mixedpid\.fasta\.uniq" | parallel -j procfile --nice 5 --eta './aligner_twilightzone_bitscore_maker_forfractddata_iterativenhmmer_parallel.pl {}'
+```
 
 ssearch34
+```
+find /models -maxdepth 1 -regex "/models/.*\-mixedpid\.fasta\.uniq" | parallel -j procfile --eta './aligner_twilightzone_bitscore_maker_forfractddata_ssearch34only_parrallelized.pl {}'
+```
 
 
 ### FPR SIMILARITY THRESHOLD
@@ -120,7 +162,28 @@ Bootstrap and Graph all rolled into one
 final_twizone.R
 ```
 ## SHUFFLED AND RANDOM CONTROLS
-### SHUFFLED
+### SHUFFLED CONTROLS AND SHUFFLED DATABASE SET UP (same procedure, different sequences)
+
+```
+for f in `find . -maxdepth 1 -regex ".*ENOG.*-mixedpid.fasta.uniq"`;do esl-shuffle -N 2 -k 3 -o $f.shuf $f;done
+for f in `find . -maxdepth 1 -regex ".*RF.*-mixedpid.fasta.uniq"`;do esl-shuffle -N 2 -d -o $f.shuf $f;done
+find . -maxdepth 1 -regex ".*.fasta.uniq.shuf" | xargs -ifoo cat foo >shuffled_database_50pairs_redo_fasta.db
+```
 
 
 ### RANDOM
+Generate Random Sequences
+```
+generate_random_sequences_withnucfreqsdecided_samelengthseqs.pl
+```
+
+Align Random Sequences
+```
+GC_simulation_data_aligner.pl
+```
+
+PID of Random Sequence
+```
+GC_simulation_alipid.pl
+```
+
