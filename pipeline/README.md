@@ -174,7 +174,15 @@ find . -maxdepth 1 -regex ".*.fasta.uniq.shuf" | xargs -ifoo cat foo >shuffled_d
 ```
 PID calculation - translate proteins, align all to cm/hmm, revtrans protein, alipid
 ```
+for f in `find . -maxdepth 1 -regex ".*ENOG.*-mixedpid.fasta.uniq.shuf"`;do translate -1 -o $f.aa --watson $f;done
+ find . -regex ".*.aa" |perl -lane '$F[0]=~s/\.\///; $F[0]=~s/\:/\t/;$C=$F[0];$C=~s/subset_genus_aaseq_combined_nocuttoff\.//;$C="$C\.fa.hmm";print"$F[0]\t$C"; system("hmmalign -o /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/hmmalign_output/$F[0].1hmmalign /home/stephmcgimpsey/Documents/Essential_HMM_CM/HMMs/Eggnog/bactNOG_hmm/$C $F[0]");'
+for f in `find . -maxdepth 1 -regex ".*.align"`;do esl-reformat clustal $f $f.clustal;done
+find . -regex ".*.align.clust" | perl -lane '$F[0]=~s/\.\///;$C=$F[0];$G=$F[0];$G=~s/align.clust//;$C=~s/align.clust/.nucalign/;system("/home/stephmcgimpsey/Scripts/pal2nal.v14/pal2nal.pl $F[0] $G >$C");'
+find . -regex ".*.nucalign" | perl -lane 'system("esl-alipid $F[0] >$F[0].pid")'
+find . -regex ".*SHUFFLED NCRNA" |perl -lane '$F[0]=~s/\.\///; $C=$F[0];$C=~s/\.fixedheader//;$G=$C;$C=~s/subset_genus_nucleotide_combined\.//;$C="$C\.cm";print"$F[0]\t$C"; system("cmalign -o /media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/bs_cuttoff/aligned_sequences/cmalign_output/$G.1cmalign /home/stephmcgimpsey/Documents/Essential_HMM_CM/CMs/Essential/$C $F[0]");'
+find . -regex ".*.nucalign" | perl -lane 'system("esl-alipid $F[0] >$F[0].pid")'
 ```
+
 
 
 ### RANDOM
