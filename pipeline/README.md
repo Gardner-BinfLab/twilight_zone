@@ -116,10 +116,13 @@ find . -regex ".*1hmmalignclust.fractd.clust2" | perl -lane '$F[0]=~s/\.\///;$C=
 
 PID of all sequences
 ```
+find . -maxdepth 1 -regex ".*.1hmmalignclustnuc.fractd" | perl -lane '$F[0]=~s/\.\///; $F[0]=~s/\:/\t/;$C=$F[0]; $C=~s/1hmmalignclustnuc\.fractd/1alipidnuc/; system("esl-alipid $F[0] >/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/bs_cuttoff/aligned_sequences/length_fractd_alignments/PID/$C")'
+find . -maxdepth 1 -regex ".*1cmalignclust.fractd.clust2" | perl -lane '$F[0]=~s/\.\///; $F[0]=~s/\:/\t/;$C=$F[0]; $C=~s/1cmalignclust\.fractd\.clust2/1alipidnuc/; system("esl-alipid $F[0] >/media/stephmcgimpsey/GardnerLab-backup1/Refseq/Sequences/bs_cuttoff/aligned_sequences/length_fractd_alignments/PID/$C")'
 ```
 
 50 Pairs selection based on PIDs
 ```
+pid_sortnsplit_forfractddata.pl
 ```
 
 
@@ -163,11 +166,14 @@ final_twizone.R
 ```
 ## SHUFFLED AND RANDOM CONTROLS
 ### SHUFFLED CONTROLS AND SHUFFLED DATABASE SET UP (same procedure, different sequences)
-
+Shuffled sequences
 ```
 for f in `find . -maxdepth 1 -regex ".*ENOG.*-mixedpid.fasta.uniq"`;do esl-shuffle -N 2 -k 3 -o $f.shuf $f;done
 for f in `find . -maxdepth 1 -regex ".*RF.*-mixedpid.fasta.uniq"`;do esl-shuffle -N 2 -d -o $f.shuf $f;done
 find . -maxdepth 1 -regex ".*.fasta.uniq.shuf" | xargs -ifoo cat foo >shuffled_database_50pairs_redo_fasta.db
+```
+PID calculation - translate proteins, align all to cm/hmm, revtrans protein, alipid
+```
 ```
 
 
